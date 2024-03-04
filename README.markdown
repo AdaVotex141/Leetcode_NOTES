@@ -1416,8 +1416,8 @@ class Solution(object):
         
 ```
 看了眼提示很快就做出来了
-### 42.Trapping Rain Water
-臭名昭著接雨水
+### 42.(HARD)Trapping Rain Water
+臭名昭著接雨水，其实还是没什么思路
 ```py
 class Solution(object):
     def trap(self, height):
@@ -1669,7 +1669,7 @@ class Solution(object):
 
 
 
-### 4.
+### 4.???大魔王
 ```py
 class Solution(object):
     def findMedianSortedArrays(self, nums1, nums2):
@@ -1698,5 +1698,299 @@ class Solution(object):
 
 
 ## Stack
-其实大部分发现都做过的，但是再做一次试试
-![](../2024-02-22-211212.png)
+其实大部分发现都做过的，但是再做一次试试,用java
+### 20.Valid Parentheses
+这一题其实有两个做法，一个是map，另一个是直接摁写
+如果是左边的括号，就压进去，如果是右边的括号，就pop出来进行对比
+```java
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
+class Solution {
+    public boolean isValid(String s) {
+        Stack<Character> stack = new Stack<>();
+        Map<Character, Character> map = new HashMap<>();
+        map.put(')', '(');
+        map.put(']', '[');
+        map.put('}', '{');
+//如果只有一个， 那就肯定不对的
+        if (s.length() == 1) {
+            return false;
+        }
+        for (int i = 0; i < s.length(); i++) {
+            //map的containsKey()methods
+            if (map.containsKey(s.charAt(i))) {
+                //如果stack不是empty，则pop一个
+                if (!stack.isEmpty()) {
+                    char check = stack.pop();
+                    if (check != map.get(s.charAt(i))) {
+                        return false;
+                    }
+                } else {
+                    //如果stack是空，则直接返回错误
+                    return false; // Closing bracket without a corresponding opening bracket
+                }
+            } else {
+                stack.push(s.charAt(i));
+            }
+        }
+//搞完了所以应该返回空栈....
+        return stack.isEmpty();
+    }
+}
+
+```
+主要学到的是一对边界条件，其实不如直接stack一个个算
+```java
+import java.util.Stack;
+
+public class ValidParentheses {
+    public boolean isValid(String s) {
+        Stack<Character> stack = new Stack<>();
+
+        for (char ch : s.toCharArray()) {
+            if (ch == '(' || ch == '[' || ch == '{') {
+                stack.push(ch);
+            } else if (ch == ')' && !stack.isEmpty() && stack.peek() == '(') {
+                stack.pop();
+            } else if (ch == ']' && !stack.isEmpty() && stack.peek() == '[') {
+                stack.pop();
+            } else if (ch == '}' && !stack.isEmpty() && stack.peek() == '{') {
+                stack.pop();
+            } else {
+                return false; // 遇到非法字符或者不匹配的括号
+            }
+        }
+
+        return stack.isEmpty(); // 栈为空表示所有括号都匹配
+    }
+```
+
+### 155.Min Stack
+其实就是stack的基础上要加一个立马返回min的功能，并且时间复杂度为O(1)
+他值得注意的点就是：万一stack.pop的就是最小值了，剩下的stack无法历遍去寻找下一个最小值
+
+目前看到两种解决办法，一个是用两个栈，还有一个是java内置一个min的变量，然后实时更新
+1. 我很好奇到底是怎么想到的，这个还更快一点= =，但是自己画了一遍stack是可行的
+```java
+class MinStack {
+    //min 初始化为整数最大值
+    int min = Integer.MAX_VALUE;
+    Stack<Integer> stack = new Stack<Integer>();
+    public void push(int x) {
+        //如果新的值比min的值还小，
+        // only push the old minimum value when the current 
+        // minimum value changes after pushing the new value x
+        if(x <= min){          
+            stack.push(min);
+            min=x;
+        }
+        stack.push(x);
+    }
+
+    public void pop() {
+        // if pop operation could result in the changing of the current minimum value, 
+        // pop twice and change the current minimum value to the last minimum value.
+        if(stack.pop() == min) {
+            min=stack.pop();
+        }
+    }
+
+    public int top() {
+        return stack.peek();
+    }
+
+    public int getMin() {
+        return min;
+    }
+}
+```
+![](2024-03-02-215046.png)
+2. 另起一个最小栈的思路：我个人觉得这个更加好理解一点
+```java
+import java.util.Stack;
+
+class MinStack {
+    private Stack<Integer> stack;
+    private Stack<Integer> minstack;
+
+    public MinStack() {
+        stack = new Stack<Integer>();
+        minstack = new Stack<Integer>();
+    }
+
+    public void push(int val) {
+        stack.push(val);
+
+        if (minstack.isEmpty() || val <= minstack.peek()) {
+            minstack.push(val);
+        }
+    }
+
+    public void pop() {
+        if (!stack.isEmpty()) {
+            int poppedValue = stack.pop();
+            if (poppedValue == minstack.peek()) {
+                minstack.pop();
+            }
+        }
+    }
+
+    public int top() {
+        if (!stack.isEmpty()) {
+            return stack.peek();
+        } else {
+            throw new IllegalStateException("Stack is empty");
+        }
+    }
+
+    public int getMin() {
+        if (!minstack.isEmpty()) {
+            return minstack.peek();
+        } else {
+            throw new IllegalStateException("Stack is empty");
+        }
+    }
+}
+
+```
+### 150.Evaluate Reverse Polish Notation
+这个也是之前做过的，试着用java再做一次
+大概思路都是懂的= =，如果是digit就push进栈，如果遇到了"+-*/"就pop两个出来
+```python
+class Solution(object):
+    def evalRPN(self, tokens):
+        """
+        :type tokens: List[str]
+        :rtype: int
+        """
+        stack = []
+        #operators = {'+', '-', '*', '/'}
+    
+        for token in tokens:
+            if token not in "+-*/":
+                stack.append(int(token))
+            else:
+                operand2 = stack.pop()
+                operand1 = stack.pop()
+                if token == '+':
+                    stack.append(operand1 + operand2)
+                elif token == '-':
+                    stack.append(operand1 - (operand2))
+                elif token == '*':
+                    stack.append((operand1) * operand2)
+                elif token == '/':
+                    stack.append(int((operand1) / (operand2)))
+
+        return stack[-1]
+
+        
+```
+根据思路很快就能写出来，但是反而pass不了case 3：
+![](img/2024-03-04-111625.png)
+感觉像是int的问题，因为会出现```6/-22```，这道题很奇怪，就是我复制了solutions里面的还是会报错
+```java
+import java.util.Stack;
+class Solution {
+    public int evalRPN(String[] tokens) {
+        Stack<Integer>stack=new Stack<Integer>();
+
+        for(String token:tokens){
+            if (Character.isDigit(token.charAt(0))||(token.charAt(0)=='-'&& token.length()>1)){
+                stack.push(Integer.parseInt(token));
+            }else{
+                int result=0;
+                int latter=stack.pop();
+                int former=stack.pop();
+                if(token.charAt(0)=='+'){
+                    result=former+latter;
+                }else if(token.charAt(0)=='-'){
+                    result=former-latter;
+                }else if(token.charAt(0)=='*'){
+                     result=former*latter;
+                }else if(token.charAt(0)=='/'){
+                    result=former/latter;
+                }
+                stack.push(result);
+            }
+        }
+    return stack.pop();
+    }
+}
+```
+有几个注意的点，主要是java相关：
+1. for (String token:tokens) 等同于
+```java
+for (int i = 0; i < tokens.length; i++) {
+            String token = tokens[i];
+```
+2.```Character.isDigit(token.charAt(0))||(token.charAt(0)=='-'&& token.length()>1)```这一长串的判断条件= =
+* token可能是一个正数，也可能是一个负数
+* Character.isDigit()是因为，Character类本身带有isDigit()这个功能
+3.```Integer.parseInt(token)```所以，Integer这个是因为自带parseInt这个功能？
+
+### 22. Generate Parentheses
+有点复杂= =试着写了一个判断是否有效括号的东西，但是还是依然没有思路然后直接看了答案，果然出现了没有见过的东西：
+**回溯算法**
+
+![](img/2024-03-04-184627.png)
+![](img/2024-03-04-184850.png)
+意思就是，open和close的最大数量都为n,然后添加```)```的条件应该为```(```的数量大于```)```，将大概结果画成树状结构就是这样的，直到跳出边界条件，最后结果就是最后的这几个
+* ```openN==closeN==n```
+* openN<n
+* closeN<openN
+递归= =
+```python
+class Solution(object):
+    def generateParenthesis(self, n):
+        result=""
+        def backtrack(s, left, right):
+          if len(s) == 2 * n:
+              result.append(s)
+              return
+          if left < n:
+              backtrack(s + '(', left + 1, right)
+          if right < left:
+              backtrack(s + ')', left, right + 1)
+        return result
+```
+### 739.Daily Temperatures
+我的解法是：遇到后面比前面大了就pop，然后如果小了就继续push，最后计算len(stack)
+![](img/2024-03-04-193129.png)
+这个意思就是一次历遍，但是可以emunerate()同时获取里面的值和index的值
+学到了一个emunerate的用法，但是很好奇这个用java做
+```python
+# enumerate(iterable, start=0)
+class Solution(object):
+    def dailyTemperatures(self, temperatures):
+        """
+        :type temperatures: List[int]
+        :rtype: List[int]
+        """
+    result=[0]*len(temperatures)
+    stack=[]  
+    for i,t in enumerate(temperatures):
+        #如果stack有数值，并且新的t大于栈顶的值
+        while stack and t>stack[-1][0]:
+            stackT, stackInd = stack.pop()
+            class Solution(object):
+    def dailyTemperatures(self, temperatures):
+        """
+        :type temperatures: List[int]
+        :rtype: List[int]
+        """
+    result=[0]*len(temperatures)
+    stack=[]  
+    for i,t in enumerate(temperatures):
+        #如果stack有数值，并且新的t大于栈顶的值
+        while stack and t>stack[-1][0]:
+            stackT, stackInd = stack.pop()
+            result[stackInd]=i-stackInd
+        stack.append([t,i])
+    return result
+        stack.append([t,i])
+    return result
+```
+我觉得最smart是这个```result[stackInd]=i-stackInd```
+![](img/2024-03-04-194959.png)
